@@ -145,9 +145,6 @@ func main() {
 	// }})
 	time.Sleep(3 * time.Second)
 	//
-	// send(conn, Message[EnableTunData]{Msg: "enable-tun", Data: EnableTunData{}})
-	// send(conn, Message[DisableTunData]{Msg: "disable-tun", Data: DisableTunData{}})
-
 	<-listen_finished
 	// select {}
 }

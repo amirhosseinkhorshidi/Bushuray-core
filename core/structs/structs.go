@@ -69,7 +69,6 @@ type GetApplicationStateData struct{}
 type ApplicationState struct {
 	Groups           []GroupWithProfiles `json:"groups"`
 	ConnectionStatus ProxyStatus         `json:"connection-status"`
-	TunStatus        bool                `json:"tun-status"`
 }
 
 type UpdateSubscriptionData struct {
@@ -147,9 +146,3 @@ type ProxyStatus struct {
 	Profile    Profile `json:"profile"`
 }
 
-type DisableTunData struct{}
-type EnableTunData struct{}
-
-type TunStatus struct {
-	IsEnabled bool `json:"is_enabled"`
-}

@@ -6,7 +6,6 @@ import (
 	"bushuray-core/db"
 	appconfig "bushuray-core/lib/AppConfig"
 	proxy "bushuray-core/lib/proxy/mainproxy"
-	tunmode "bushuray-core/lib/proxy/tun"
 	"bushuray-core/structs"
 	"encoding/binary"
 	"encoding/json"
@@ -23,16 +22,14 @@ type Server struct {
 	DB            *db.DB
 	mutex         sync.Mutex
 	proxy_manager *proxy.ProxyManager
-	tun_namager   *tunmode.TunModeManager
 	stop_sig      chan<- bool
 }
 
-func NewServer(database *db.DB, proxy_manager *proxy.ProxyManager, tun_manager *tunmode.TunModeManager, stop_sig chan<- bool) *Server {
+func NewServer(database *db.DB, proxy_manager *proxy.ProxyManager, stop_sig chan<- bool) *Server {
 	return &Server{
 		DB:            database,
 		clients:       make(map[string]net.Conn),
 		proxy_manager: proxy_manager,
-		tun_namager:   tun_manager,
 		stop_sig:      stop_sig,
 	}
 }
@@ -48,7 +45,6 @@ func (s *Server) Start() {
 
 	log.Println("server is listening on port", app_config.CoreTCPPort)
 
-	go s.handleTunModeStatusChange()
 	go s.handleStatusChange()
 	go s.handleTestResults()
 
@@ -180,7 +176,7 @@ func (s *Server) handleConnection(conn net.Conn, clientID string) {
 				log.Printf("Invalid body for connect %v", err)
 				return
 			}
-			command_handler.Connect(data, s.proxy_manager, s.tun_namager)
+			command_handler.Connect(data, s.proxy_manager)
 
 		case "disconnect":
 			var data structs.DisconnectData
@@ -188,7 +184,7 @@ func (s *Server) handleConnection(conn net.Conn, clientID string) {
 				log.Printf("Invalid body for disconnect %v", err)
 				return
 			}
-			command_handler.Disconnect(data, s.proxy_manager, s.tun_namager)
+			command_handler.Disconnect(data, s.proxy_manager)
 
 		case "test-profile":
 			var data structs.TestProfileData
@@ -204,7 +200,7 @@ func (s *Server) handleConnection(conn net.Conn, clientID string) {
 				log.Printf("Invalid body for get-application-state%v", err)
 				return
 			}
-			command_handler.GetApplicationState(data, s.proxy_manager, s.tun_namager)
+			command_handler.GetApplicationState(data, s.proxy_manager)
 
 		case "update-subscription":
 			var data structs.UpdateSubscriptionData
@@ -213,22 +209,6 @@ func (s *Server) handleConnection(conn net.Conn, clientID string) {
 				return
 			}
 			go command_handler.UpdateSubscription(data, s.proxy_manager)
-
-		case "enable-tun":
-			var data structs.EnableTunData
-			if err := json.Unmarshal(raw_tcp_message.Data, &data); err != nil {
-				log.Printf("Invalid body for enable-tun%v", err)
-				return
-			}
-			command_handler.EnableTun(data, s.proxy_manager, s.tun_namager)
-
-		case "disable-tun":
-			var data structs.DisableTunData
-			if err := json.Unmarshal(raw_tcp_message.Data, &data); err != nil {
-				log.Printf("Invalid body for disable-tun%v", err)
-				return
-			}
-			command_handler.DisableTun(data, s.tun_namager)
 
 		case "is-root":
 			var data structs.IsRootData

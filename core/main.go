@@ -6,7 +6,6 @@ import (
 	"bushuray-core/lib/AppConfig"
 	"bushuray-core/lib/TCPServer"
 	proxy "bushuray-core/lib/proxy/mainproxy"
-	tunmode "bushuray-core/lib/proxy/tun"
 	"bushuray-core/structs"
 	"fmt"
 	lumberjack "gopkg.in/natefinch/lumberjack.v2"
@@ -17,10 +16,8 @@ import (
 )
 
 func main() {
-	log.Println("logs: ./core-debug.log")
-	log.Println("for unix you can run: tail -f ./core-debug.log")
 	log.SetOutput(&lumberjack.Logger{
-		Filename:   "core-debug.log",
+		Filename:   os.TempDir() + "/bushuray-core-debug.log",
 		MaxSize:    20,
 		MaxBackups: 1,
 		MaxAge:     0,
@@ -35,10 +32,8 @@ func main() {
 	database.Initialize()
 	proxy_manager := proxy.ProxyManager{}
 	proxy_manager.Init()
-	tun_manager := tunmode.TunModeManager{}
-	tun_manager.Init()
 
-	server := TCPServer.NewServer(&database, &proxy_manager, &tun_manager, stop_sig)
+	server := TCPServer.NewServer(&database, &proxy_manager, stop_sig)
 	server.Start()
 	go func() {
 		sigs := make(chan os.Signal, 1)
@@ -52,7 +47,6 @@ func main() {
 		}
 		log.Println(reason)
 		proxy_manager.Stop()
-		tun_manager.Stop()
 		server.BroadCast(lib.CreateJsonNotification("warn", structs.Warning{Key: "died", Content: reason}))
 		os.Exit(0)
 	}()
