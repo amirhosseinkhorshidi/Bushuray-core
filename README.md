@@ -1,6 +1,6 @@
 # Bushuray-core
 
-Back-end of [Bushuray-tui](https://github.com/Keivan-sf/Bushuray-tui). Handles proxy management, subscription updates, and latency testing via a local TCP server.
+Back-end of [Bushuray-tui](https://github.com/amirhosseinkhorshidi/Bushuray-tui). Handles proxy management, subscription updates, and latency testing via a local TCP server.
 
 ## Requirements
 
